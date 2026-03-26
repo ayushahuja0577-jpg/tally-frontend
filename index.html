@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bank to Tally XML Converter</title>
+    <!-- Yeh Tailwind CSS hai jo website ko sundar banata hai -->
+    <script src="https://cdn.tailwindcss.com"></script> 
+</head>
+<body class="bg-gray-50">
+    <!-- Upar ka Navigation Bar -->
+    <nav class="bg-white shadow p-4 flex justify-between items-center">
+        <h1 class="text-2xl font-extrabold text-blue-600">TallyConverter AI</h1>
+        <div>
+            <span class="mr-4 font-semibold text-gray-700">Free Credits: <span id="creditCount" class="text-green-500 font-bold">5</span></span>
+            <button class="bg-blue-600 text-white px-4 py-2 rounded shadow hover:bg-blue-700 transition">Login / Signup</button>
+        </div>
+    </nav>
+
+    <!-- Main Upload Area -->
+    <div class="max-w-3xl mx-auto mt-12 p-8 bg-white rounded-xl shadow-lg text-center border border-gray-100">
+        <h2 class="text-3xl font-bold mb-4 text-gray-800">Convert Bank Statements to Tally XML</h2>
+        <p class="text-gray-500 mb-8 text-lg">Upload your PDF or Excel (.xlsx, .csv) bank statement, and our AI will generate a Tally-ready XML file in seconds.</p>
+        
+        <div class="border-2 border-dashed border-blue-300 p-8 rounded-lg mb-6 bg-blue-50">
+            <input type="file" id="fileInput" accept=".pdf, .xlsx, .xls, .csv" class="block w-full text-md text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer" />
+        </div>
+        
+        <button onclick="uploadFile()" id="convertBtn" class="bg-green-500 text-white px-8 py-4 rounded-lg text-xl font-bold shadow-md hover:bg-green-600 w-full transition">✨ Convert to XML (Costs 1 Credit)</button>
+        
+        <div id="status" class="mt-6 text-blue-600 font-semibold text-lg hidden">Processing...</div>
+        
+        <textarea id="resultBox" class="mt-6 w-full h-64 p-4 border-2 border-gray-200 rounded-lg bg-gray-50 hidden font-mono text-sm" readonly placeholder="Your Tally XML will appear here..."></textarea>
+    </div>
+
+    <script>
+        // ⚠️ DHYAN DEIN: NEECHE WALI LINE MEIN APNA RENDER URL DAALEIN ⚠️
+        const BACKEND_URL = "https://ayush-tally-helper.onrender.com"; 
+
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput').files[0];
+            const statusDiv = document.getElementById('status');
+            const resultBox = document.getElementById('resultBox');
+            const convertBtn = document.getElementById('convertBtn');
+
+            if (!fileInput) {
+                alert("Please select a PDF or Excel file first!");
+                return;
+            }
+
+            // Jab file upload ho rahi ho tab button aur text change karna
+            statusDiv.classList.remove('hidden');
+            statusDiv.innerHTML = "⏳ AI is reading your file... Please wait (it takes 10-20 seconds).";
+            convertBtn.disabled = true;
+            convertBtn.classList.add('opacity-50');
+            resultBox.classList.add('hidden');
+
+            const formData = new FormData();
+            formData.append('file', fileInput);
+
+            try {
+                // Backend ko file bhej rahe hain
+                const response = await fetch(`${BACKEND_URL}/api/convert`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    statusDiv.innerHTML = "✅ Conversion Successful! Copy your XML below.";
+                    statusDiv.classList.replace('text-blue-600', 'text-green-600');
+                    resultBox.value = data.xml;
+                    resultBox.classList.remove('hidden');
+                } else {
+                    statusDiv.innerHTML = "❌ Error: " + data.error;
+                    statusDiv.classList.replace('text-blue-600', 'text-red-600');
+                }
+            } catch (error) {
+                statusDiv.innerHTML = "❌ Server Error. Please make sure your Render backend is live.";
+                statusDiv.classList.replace('text-blue-600', 'text-red-600');
+            }
+
+            convertBtn.disabled = false;
+            convertBtn.classList.remove('opacity-50');
+        }
+    </script>
+</body>
+</html>
